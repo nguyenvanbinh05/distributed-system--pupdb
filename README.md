@@ -34,7 +34,7 @@ Mã nguồn dự án đã được thực nghiệm thành công và lưu trữ t
 2. Kích hoạt môi trường ảo (Virtual Environment) và cài đặt thư viện:
    ```bash
    python -m venv venv
-   source venv\Scripts\activate  # Đối với MacOS: source venv/bin/activate
+   venv\Scripts\activate  # Đối với MacOS: source venv/bin/activate
    pip install -r requirements.txt
    ```
 3. Khởi chạy các Node trên các cổng (port) khác nhau để giả lập mạng lưới:
