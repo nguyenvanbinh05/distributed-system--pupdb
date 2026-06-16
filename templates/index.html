@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PupDB - Distributed Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background: #f8fafc;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .ring-container {
+        position: relative;
+        width: 350px;
+        height: 350px;
+        border-radius: 50%;
+        border: 4px dashed #cbd5e1;
+        margin: 40px auto;
+        background: white;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      .center-dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #94a3b8;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .node-point {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        border: 3px solid white;
+        z-index: 10;
+        transition: all 0.4s ease;
+      }
+      .key-point {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+        transition: all 0.4s ease;
+      }
+      .label {
+        position: absolute;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+        transform: translate(-50%, -200%);
+        text-shadow: 1px 1px 2px white;
+        transition: all 0.4s ease;
+      }
+      .node-active {
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+      }
+      .node-inactive {
+        background: #9ca3af;
+        border-color: #f3f4f6;
+      }
+      .text-active {
+        color: #dc2626;
+      }
+      .text-inactive {
+        color: #9ca3af;
+        text-decoration: line-through;
+      }
+    </style>
+  </head>
+  <body class="text-slate-800 p-6">
+    <div class="max-w-5xl mx-auto">
+      <h1 class="text-3xl font-extrabold text-center text-slate-800 mb-10">
+        Bộ Định Tuyến PupDB - Consistent Hashing
+      </h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div
+          class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center"
+        >
+          <h2 class="text-xl font-bold mb-2 text-slate-700">Cụm Máy Chủ</h2>
+          <div id="ui-ring" class="ring-container">
+            <div class="center-dot"></div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-red-600 flex items-center">
+              Server
+            </h2>
+            <div class="flex gap-2 mb-4">
+              <span
+                class="bg-gray-100 border border-r-0 rounded-l px-3 py-2 text-sm text-gray-600 flex items-center"
+                >127.0.0.1:</span
+              >
+              <input
+                type="number"
+                id="node-port"
+                class="border rounded-r px-3 py-2 w-full text-sm outline-none focus:border-red-500"
+                placeholder="Port (VD: 5004)"
+              />
+              <button
+                onclick="addNode()"
+                class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded text-sm font-bold shadow transition"
+              >
+                Thêm
+              </button>
+              <button
+                onclick="syncData()"
+                class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded text-sm font-bold shadow transition"
+              >
+                Đồng Bộ
+              </button>
+            </div>
+            <ul
+              id="node-list"
+              class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+            ></ul>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-blue-600">
+              Ghi/Đọc Dữ liệu
+            </h2>
+            <div class="space-y-3 mb-4 bg-slate-50 p-4 rounded-lg border">
+              <input
+                type="text"
+                id="data-key"
+                class="border rounded px-3 py-2 w-full text-sm outline-none"
+                placeholder="Key"
+              />
+              <input
+                type="text"
+                id="data-value"
+                class="border rounded px-3 py-2 w-full text-sm outline-none"
+                placeholder="Value"
+              />
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-bold">Nhân bản</label>
+                <input
+                  type="number"
+                  id="data-replicas"
+                  value="2"
+                  min="1"
+                  max="5"
+                  class="border rounded px-2 py-1 w-16 text-sm text-center"
+                />
+              </div>
+              <div class="flex gap-2">
+                <button
+                  onclick="setData()"
+                  class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-bold shadow transition"
+                >
+                  Lưu
+                </button>
+                <button
+                  onclick="getData()"
+                  class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded text-sm font-bold shadow transition"
+                >
+                  Đọc
+                </button>
+              </div>
+            </div>
+            <div
+              id="action-log"
+              class="text-sm p-3 rounded border hidden mb-2 font-mono"
+            ></div>
+            <ul
+              id="key-list"
+              class="space-y-2 text-sm max-h-[150px] overflow-y-auto"
+            ></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function fetchStatus() {
+        const res = await fetch("/status");
+        const data = await res.json();
+        drawRing(data.nodes, data.keys);
+        updateLists(data.nodes, data.keys);
+      }
+
+      async function syncData(silent = false) {
+        if (!silent) showLog("Đang đồng bộ...");
+
+        try {
+          await fetch("/sync");
+          if (!silent) {
+            // Thêm dòng này để cập nhật trạng thái thành công
+            showLog("Đã đồng bộ xong dữ liệu từ các Node!");
+
+            // Tùy chọn: Tự động ẩn thông báo sau 2 giây
+            setTimeout(() => {
+              document.getElementById("action-log").style.display = "none";
+            }, 2000);
+          }
+        } catch (error) {
+          if (!silent) showLog("Lỗi đồng bộ!", true);
+        }
+
+        fetchStatus();
+      }
+
+      function updateLists(nodes, keys) {
+        const nodeList = document.getElementById("node-list");
+        nodeList.innerHTML = "";
+        for (const [url, info] of Object.entries(nodes)) {
+          const port = url.split(":").pop();
+          nodeList.innerHTML += `
+                    <li class="flex justify-between items-center bg-${info.active ? "red-50" : "gray-100"} p-2 rounded border border-${info.active ? "red-200" : "gray-300"}">
+                        <span class="text-sm font-bold ${info.active ? "text-red-700" : "text-gray-500 line-through"}">Port: ${port}</span>
+                        <button onclick="toggleNode('${url}')" class="text-xs ${info.active ? "bg-red-500" : "bg-green-500"} text-white px-3 py-1 rounded transition">
+                            ${info.active ? "Tắt" : "Bật"}
+                        </button>
+                    </li>`;
+        }
+        const keyList = document.getElementById("key-list");
+        keyList.innerHTML = "";
+        for (const [key, info] of Object.entries(keys)) {
+          keyList.innerHTML += `
+                    <li class="bg-blue-50 p-2 rounded border border-blue-100 flex justify-between items-center">
+                        <b>${key}</b> <span class="text-xs text-slate-500">Node: ${info.replicas.join(", ")}</span>
+                    </li>`;
+        }
+      }
+
+      function showLog(msg, isError = false) {
+        const log = document.getElementById("action-log");
+        log.innerHTML = msg;
+        log.style.display = "block";
+        log.className = `text-sm p-3 rounded border mb-2 ${isError ? "bg-red-50 text-red-700 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`;
+      }
+
+      async function addNode() {
+        const port = document.getElementById("node-port").value;
+        if (!port) return showLog("Vui lòng nhập Port!", true);
+        await fetch("/add_node", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: `http://127.0.0.1:${port}` }),
+        });
+        syncData(true);
+      }
+
+      async function toggleNode(url) {
+        await fetch("/toggle_node", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        fetchStatus();
+      }
+
+      async function setData() {
+        const key = document.getElementById("data-key").value;
+        const value = document.getElementById("data-value").value;
+        const replicas = document.getElementById("data-replicas").value;
+        if (!key) return showLog("Nhập Key!", true);
+        const res = await fetch("/set", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value, replicas }),
+        });
+        const data = await res.json();
+        showLog(data.message, data.status === "error");
+        fetchStatus();
+      }
+
+      async function getData() {
+        const key = document.getElementById("data-key").value;
+        if (!key) return showLog("Nhập Key!", true);
+
+        const res = await fetch(`/get?key=${key}`);
+        const data = await res.json();
+
+        if (data.status === "success") {
+          showLog(
+            `<b>${key}</b> : ${data.value} <br><span class="text-xs text-gray-500 italic">Dữ liệu từ: ${data.fetched_from}</span>`,
+          );
+        } else {
+          showLog(data.message, true);
+        }
+        fetchStatus();
+      }
+
+      function drawRing(nodesDict, keysDict) {
+        const ring = document.getElementById("ui-ring");
+        ring.innerHTML = '<div class="center-dot"></div>';
+        for (const [url, info] of Object.entries(nodesDict)) {
+          const rad = (info.angle - 90) * (Math.PI / 180);
+          const x = 175 + 175 * Math.cos(rad);
+          const y = 175 + 175 * Math.sin(rad);
+          ring.innerHTML += `<div class="node-point ${info.active ? "node-active" : "node-inactive"}" style="left:${x}px; top:${y}px;"></div>
+                                   <div class="label ${info.active ? "text-active" : "text-inactive"}" style="left:${x}px; top:${y}px;">${url.split(":").pop()}</div>`;
+        }
+        let nodeKeyCount = {};
+        for (const [key, info] of Object.entries(keysDict)) {
+          info.replicas.forEach((replicaPort) => {
+            let targetAngle =
+              nodesDict[`http://127.0.0.1:${replicaPort}`]?.angle;
+            if (targetAngle !== undefined) {
+              nodeKeyCount[replicaPort] = (nodeKeyCount[replicaPort] || 0) + 1;
+              const radius = 135 - (nodeKeyCount[replicaPort] - 1) * 20;
+              const rad = (targetAngle - 90) * (Math.PI / 180);
+              const x = 175 + radius * Math.cos(rad);
+              const y = 175 + radius * Math.sin(rad);
+              const isActive =
+                nodesDict[`http://127.0.0.1:${replicaPort}`]?.active;
+              ring.innerHTML += `<div class="key-point" style="left:${x}px; top:${y}px; background:${isActive ? "#3b82f6" : "#9ca3af"}"></div>
+                                           <div class="label ${isActive ? "text-blue-600" : "text-gray-400"}" style="left:${x}px; top:${y}px; transform: translate(-50%, -150%);">${key}</div>`;
+            }
+          });
+        }
+      }
+      fetchStatus();
+      setInterval(fetchStatus, 3000);
+    </script>
+  </body>
+</html>
