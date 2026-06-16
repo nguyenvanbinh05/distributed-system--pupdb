@@ -26,6 +26,15 @@ def get_data():
         return jsonify({"status": "not_found", "node": app.config['PORT']})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+    
+@app.route('/delete', methods=['POST'])
+def delete_data():
+    data = request.json
+    try:
+        db.remove(data['key']) 
+        return jsonify({"status": "success", "message": f"Đã xóa khỏi {app.config['PORT']}"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/get_all', methods=['GET'])
 def get_all():

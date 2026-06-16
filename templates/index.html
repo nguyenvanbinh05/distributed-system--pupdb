@@ -47,30 +47,16 @@
         transform: translate(-50%, -50%);
         z-index: 5;
         transition: all 0.4s ease;
+        border: 2px solid white;
       }
       .label {
         position: absolute;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: bold;
         white-space: nowrap;
         transform: translate(-50%, -200%);
         text-shadow: 1px 1px 2px white;
         transition: all 0.4s ease;
-      }
-      .node-active {
-        background: #ef4444;
-        box-shadow: 0 0 8px #ef4444;
-      }
-      .node-inactive {
-        background: #9ca3af;
-        border-color: #f3f4f6;
-      }
-      .text-active {
-        color: #dc2626;
-      }
-      .text-inactive {
-        color: #9ca3af;
-        text-decoration: line-through;
       }
     </style>
   </head>
@@ -84,7 +70,9 @@
         <div
           class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center"
         >
-          <h2 class="text-xl font-bold mb-2 text-slate-700">Cụm Máy Chủ</h2>
+          <h2 class="text-xl font-bold mb-2 text-slate-700">
+            Cụm Máy Chủ
+          </h2>
           <div id="ui-ring" class="ring-container">
             <div class="center-dot"></div>
           </div>
@@ -92,8 +80,8 @@
 
         <div class="space-y-6">
           <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-red-600 flex items-center">
-              Server
+            <h2 class="text-xl font-bold mb-4 text-slate-700 flex items-center">
+              Quản lý Server
             </h2>
             <div class="flex gap-2 mb-4">
               <span
@@ -103,7 +91,7 @@
               <input
                 type="number"
                 id="node-port"
-                class="border rounded-r px-3 py-2 w-full text-sm outline-none focus:border-red-500"
+                class="border rounded-r px-3 py-2 w-full text-sm outline-none focus:border-blue-500"
                 placeholder="Port (VD: 5004)"
               />
               <button
@@ -116,7 +104,7 @@
                 onclick="syncData()"
                 class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded text-sm font-bold shadow transition"
               >
-                Đồng Bộ
+                Đồng bộ
               </button>
             </div>
             <ul
@@ -126,7 +114,7 @@
           </div>
 
           <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-blue-600">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">
               Ghi/Đọc Dữ liệu
             </h2>
             <div class="space-y-3 mb-4 bg-slate-50 p-4 rounded-lg border">
@@ -143,7 +131,7 @@
                 placeholder="Value"
               />
               <div class="flex items-center gap-2">
-                <label class="text-sm font-bold">Nhân bản</label>
+                <label class="text-sm font-bold">Số bản sao:</label>
                 <input
                   type="number"
                   id="data-replicas"
@@ -182,6 +170,28 @@
     </div>
 
     <script>
+      const PALETTE = [
+        "#ef4444",
+        "#3b82f6",
+        "#10b981",
+        "#f59e0b",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+        "#f97316",
+        "#84cc16",
+      ];
+      let portColors = {};
+      let colorIdx = 0;
+
+      function getColor(port) {
+        if (!portColors[port]) {
+          portColors[port] = PALETTE[colorIdx % PALETTE.length];
+          colorIdx++;
+        }
+        return portColors[port];
+      }
+
       async function fetchStatus() {
         const res = await fetch("/status");
         const data = await res.json();
@@ -191,22 +201,19 @@
 
       async function syncData(silent = false) {
         if (!silent) showLog("Đang đồng bộ...");
-
         try {
           await fetch("/sync");
           if (!silent) {
-            // Thêm dòng này để cập nhật trạng thái thành công
             showLog("Đã đồng bộ xong dữ liệu từ các Node!");
-
-            // Tùy chọn: Tự động ẩn thông báo sau 2 giây
-            setTimeout(() => {
-              document.getElementById("action-log").style.display = "none";
-            }, 2000);
+            setTimeout(
+              () =>
+                (document.getElementById("action-log").style.display = "none"),
+              2500,
+            );
           }
         } catch (error) {
           if (!silent) showLog("Lỗi đồng bộ!", true);
         }
-
         fetchStatus();
       }
 
@@ -215,21 +222,66 @@
         nodeList.innerHTML = "";
         for (const [url, info] of Object.entries(nodes)) {
           const port = url.split(":").pop();
+          const nodeColor = info.active ? getColor(port) : "#9ca3af";
+
           nodeList.innerHTML += `
-                    <li class="flex justify-between items-center bg-${info.active ? "red-50" : "gray-100"} p-2 rounded border border-${info.active ? "red-200" : "gray-300"}">
-                        <span class="text-sm font-bold ${info.active ? "text-red-700" : "text-gray-500 line-through"}">Port: ${port}</span>
-                        <button onclick="toggleNode('${url}')" class="text-xs ${info.active ? "bg-red-500" : "bg-green-500"} text-white px-3 py-1 rounded transition">
+                    <li class="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
+                        <span class="text-sm font-bold flex items-center gap-2" style="color: ${nodeColor}; ${!info.active ? "text-decoration: line-through;" : ""}">
+                            <span style="width:12px; height:12px; border-radius:50%; background-color:${nodeColor}"></span>
+                            Port: ${port} <span class="font-normal text-xs text-gray-400">(${info.angle}°)</span>
+                        </span>
+                        <button onclick="toggleNode('${url}')" class="text-xs bg-slate-100 hover:bg-slate-200 border px-3 py-1 rounded transition text-slate-600">
                             ${info.active ? "Tắt" : "Bật"}
                         </button>
                     </li>`;
         }
         const keyList = document.getElementById("key-list");
         keyList.innerHTML = "";
+
+        let keysByPort = {};
+        for (const url of Object.keys(nodes)) {
+          keysByPort[url.split(":").pop()] = [];
+        }
+
         for (const [key, info] of Object.entries(keys)) {
+          if (!info.replicas) continue;
+
+          info.replicas.forEach((port, index) => {
+            if (!keysByPort[port]) keysByPort[port] = [];
+            keysByPort[port].push({
+              name: key,
+              angle: info.angle,
+              isPrimary: index === 0,
+            });
+          });
+        }
+
+
+        for (const [port, portKeys] of Object.entries(keysByPort)) {
+          if (portKeys.length === 0) continue;
+
+          const nodeColor = nodes[`http://127.0.0.1:${port}`]?.active
+            ? getColor(port)
+            : "#9ca3af";
+
           keyList.innerHTML += `
-                    <li class="bg-blue-50 p-2 rounded border border-blue-100 flex justify-between items-center">
-                        <b>${key}</b> <span class="text-xs text-slate-500">Node: ${info.replicas.join(", ")}</span>
-                    </li>`;
+                    <div class="text-xs font-bold mt-4 mb-2 flex items-center gap-1" style="color: ${nodeColor}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        Lưu trữ tại Server ${port}
+                    </div>`;
+
+          portKeys.forEach((k) => {
+            // Badge phân biệt Bản Chính và Bản Sao
+            const roleBadge = k.isPrimary
+              ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 font-medium">Bản chính</span>`
+              : `<span class="text-[10px] text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">Bản sao</span>`;
+
+            keyList.innerHTML += `
+                        <li class="bg-white p-2 rounded border shadow-sm flex justify-between items-center ml-2 border-l-4 mb-1 ${k.isPrimary ? "" : "opacity-80"}" style="border-left-color: ${nodeColor}">
+                            <b style="color: ${nodeColor}">${k.name} <span class="text-[10px] font-normal text-gray-400">(${k.angle}°)</span></b>
+                            ${roleBadge}
+                        </li>`;
+          });
         }
       }
 
@@ -243,12 +295,15 @@
       async function addNode() {
         const port = document.getElementById("node-port").value;
         if (!port) return showLog("Vui lòng nhập Port!", true);
-        await fetch("/add_node", {
+        showLog("Đang Thêm Server và tổ chức lại dải băm (Rebalancing)...");
+        const res = await fetch("/add_node", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: `http://127.0.0.1:${port}` }),
         });
-        syncData(true);
+        const data = await res.json();
+        showLog(` ${data.message}`);
+        fetchStatus();
       }
 
       async function toggleNode(url) {
@@ -278,49 +333,73 @@
       async function getData() {
         const key = document.getElementById("data-key").value;
         if (!key) return showLog("Nhập Key!", true);
-
         const res = await fetch(`/get?key=${key}`);
         const data = await res.json();
-
-        if (data.status === "success") {
+        if (data.status === "success")
           showLog(
-            `<b>${key}</b> : ${data.value} <br><span class="text-xs text-gray-500 italic">Dữ liệu từ: ${data.fetched_from}</span>`,
+            `<b>${key}</b> = ${data.value} <br><span class="text-xs text-gray-500 italic">Dữ liệu từ: ${data.fetched_from}</span>`,
           );
-        } else {
-          showLog(data.message, true);
-        }
+        else showLog(data.message, true);
         fetchStatus();
       }
 
       function drawRing(nodesDict, keysDict) {
         const ring = document.getElementById("ui-ring");
-        ring.innerHTML = '<div class="center-dot"></div>';
+
+        // Vẽ mặt nền: 2 Trục tọa độ và các mốc góc độ
+        const baseHTML = `
+                <div style="position: absolute; width: 2px; height: 100%; background: #e2e8f0; left: 50%; transform: translateX(-50%); z-index: 1;"></div>
+                <div style="position: absolute; width: 100%; height: 2px; background: #e2e8f0; top: 50%; transform: translateY(-50%); z-index: 1;"></div>
+                
+                <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;">0°</div>
+                <div style="position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; font-weight: bold;">90°</div>
+                <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;">180°</div>
+                <div style="position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; font-weight: bold;">270°</div>
+
+                <div class="center-dot" style="z-index: 2;"></div>
+            `;
+        ring.innerHTML = baseHTML;
+
+        // Vẽ Node
         for (const [url, info] of Object.entries(nodesDict)) {
+          const port = url.split(":").pop();
+          const nodeColor = info.active ? getColor(port) : "#9ca3af";
+
           const rad = (info.angle - 90) * (Math.PI / 180);
           const x = 175 + 175 * Math.cos(rad);
           const y = 175 + 175 * Math.sin(rad);
-          ring.innerHTML += `<div class="node-point ${info.active ? "node-active" : "node-inactive"}" style="left:${x}px; top:${y}px;"></div>
-                                   <div class="label ${info.active ? "text-active" : "text-inactive"}" style="left:${x}px; top:${y}px;">${url.split(":").pop()}</div>`;
+
+          const shadow = info.active
+            ? `box-shadow: 0 0 10px ${nodeColor};`
+            : "";
+
+          ring.innerHTML += `<div class="node-point" style="left:${x}px; top:${y}px; background-color: ${nodeColor}; ${shadow}"></div>
+                                   <div class="label" style="left:${x}px; top:${y}px; color: ${nodeColor}; z-index: 10;">${port} (${info.angle}°)</div>`;
         }
-        let nodeKeyCount = {};
+
+        let angleCollisionCount = {};
         for (const [key, info] of Object.entries(keysDict)) {
-          info.replicas.forEach((replicaPort) => {
-            let targetAngle =
-              nodesDict[`http://127.0.0.1:${replicaPort}`]?.angle;
-            if (targetAngle !== undefined) {
-              nodeKeyCount[replicaPort] = (nodeKeyCount[replicaPort] || 0) + 1;
-              const radius = 135 - (nodeKeyCount[replicaPort] - 1) * 20;
-              const rad = (targetAngle - 90) * (Math.PI / 180);
-              const x = 175 + radius * Math.cos(rad);
-              const y = 175 + radius * Math.sin(rad);
-              const isActive =
-                nodesDict[`http://127.0.0.1:${replicaPort}`]?.active;
-              ring.innerHTML += `<div class="key-point" style="left:${x}px; top:${y}px; background:${isActive ? "#3b82f6" : "#9ca3af"}"></div>
-                                           <div class="label ${isActive ? "text-blue-600" : "text-gray-400"}" style="left:${x}px; top:${y}px; transform: translate(-50%, -150%);">${key}</div>`;
-            }
-          });
+          if (info.angle === undefined) continue;
+
+          const primaryPort = info.replicas[0];
+          const keyColor =
+            primaryPort && nodesDict[`http://127.0.0.1:${primaryPort}`]?.active
+              ? getColor(primaryPort)
+              : "#9ca3af";
+
+          angleCollisionCount[info.angle] =
+            (angleCollisionCount[info.angle] || 0) + 1;
+          const radius = 135 - (angleCollisionCount[info.angle] - 1) * 20;
+
+          const rad = (info.angle - 90) * (Math.PI / 180);
+          const x = 175 + radius * Math.cos(rad);
+          const y = 175 + radius * Math.sin(rad);
+
+          ring.innerHTML += `<div class="key-point" style="left:${x}px; top:${y}px; background-color: ${keyColor}"></div>
+                                   <div class="label" style="left:${x}px; top:${y}px; color: ${keyColor}; transform: translate(-50%, -150%);">${key} (${info.angle}°)</div>`;
         }
       }
+
       fetchStatus();
       setInterval(fetchStatus, 3000);
     </script>
