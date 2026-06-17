@@ -61,7 +61,7 @@
   <body class="text-slate-800 p-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-extrabold text-center text-slate-800 mb-10">
-        🚀 Bộ Quản Trị Cụm Lưu Trữ PupDB - Consistent Hashing
+        Quản Trị Cụm Lưu Trữ PupDB - Consistent Hashing
       </h1>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -71,7 +71,7 @@
           <h2
             class="text-lg font-bold mb-2 text-slate-700 flex items-center gap-2"
           >
-            🔄 Sơ Đồ Định Tuyến VNodes
+            Mô Phỏng Các Node và Key
           </h2>
           <p class="text-xs text-slate-400 text-center mb-4">
             Ánh xạ dải băm ngẫu nhiên đan xen phân tán
@@ -88,18 +88,18 @@
             <h2
               class="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"
             >
-              🖥️ Quản lý Cụm Máy Chủ
+              Quản lý Cụm Node
             </h2>
             <div class="flex gap-2">
-              <span
+              <!-- <span
                 class="bg-gray-100 border border-r-0 rounded-l px-3 py-2 text-sm text-gray-500 flex items-center"
                 >127.0.0.1:</span
-              >
+              > -->
               <input
                 type="number"
                 id="node-port"
                 class="border rounded-r px-3 py-2 w-full text-sm outline-none focus:border-blue-500"
-                placeholder="Port (VD: 5004)"
+                placeholder="(VD: 5004)"
               />
               <button
                 onclick="addNode()"
@@ -112,7 +112,7 @@
                 title="Kích hoạt Tái cân bằng toàn cụm chủ động"
                 class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-bold shadow transition shrink-0 flex items-center gap-1"
               >
-                ⚖️ Cân Bằng
+                Cân Bằng
               </button>
             </div>
             <ul
@@ -127,7 +127,7 @@
             <h2
               class="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"
             >
-              💾 Thao Tác Dữ Liệu
+              Thao Tác Dữ Liệu
             </h2>
             <div
               class="space-y-3 mb-4 bg-slate-50 p-4 rounded-lg border border-slate-200"
@@ -147,9 +147,7 @@
               <div
                 class="flex items-center justify-between bg-white p-2 rounded border border-slate-200"
               >
-                <label class="text-xs font-bold text-slate-600"
-                  >Hệ số nhân bản (Replicas):</label
-                >
+                <label class="text-xs font-bold text-slate-600">Bản sao:</label>
                 <input
                   type="number"
                   id="data-replicas"
@@ -172,6 +170,12 @@
                 >
                   Đọc Key
                 </button>
+                <button
+                  onclick="deleteData()"
+                  class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm font-bold shadow transition"
+                >
+                  Xóa Key
+                </button>
               </div>
             </div>
             <div
@@ -189,31 +193,19 @@
               <h2
                 class="text-lg font-bold text-slate-700 flex items-center gap-2"
               >
-                📦 Phân Bổ Ổ Cứng Thực Tế
+                Danh Sách Key Theo Node
               </h2>
               <p class="text-xs text-slate-400">
-                Chi tiết vật lý các file JSON trên từng ổ đĩa
+                Hiển thị Key được phân bổ theo từng Node
               </p>
             </div>
             <button
               id="refresh-btn"
               onclick="manualRefresh()"
-              title="Làm mới danh sách dữ liệu từ Server"
-              class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg border transition shadow-sm flex items-center justify-center"
+              title="Làm mới danh sách dữ liệu từ các Node"
+              class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg border transition shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
             >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"
-                ></path>
-              </svg>
+              <span id="refresh-text" class="text-sm font-bold">Tải lại</span>
             </button>
           </div>
 
@@ -251,7 +243,6 @@
       }
 
       async function fetchStatus() {
-        // Dùng trick thêm timestamp (?t=...) để chống Cache trình duyệt 100%
         const res = await fetch("/status?t=" + new Date().getTime());
         const data = await res.json();
         drawRing(data.nodes, data.keys);
@@ -260,19 +251,21 @@
 
       async function manualRefresh() {
         const btn = document.getElementById("refresh-btn");
-        // Cho icon bên trong nút xoay vòng vòng tạo cảm giác loading
-        btn.querySelector("svg").classList.add("animate-spin", "text-blue-500");
+        const text = document.getElementById("refresh-text");
+
+        // Khóa nút và đổi chữ
+        btn.disabled = true;
+        text.innerText = "Đang tải...";
 
         await fetchStatus();
 
-        // Dừng xoay sau 0.5s và hiển thị thông báo góc dưới
+        // Mở khóa nút và đổi lại chữ sau 0.5s
         setTimeout(() => {
-          btn
-            .querySelector("svg")
-            .classList.remove("animate-spin", "text-blue-500");
+          text.innerText = "Tải lại";
+          btn.disabled = false;
         }, 500);
 
-        showLog("🔄 Giao diện đã đồng bộ dữ liệu mới nhất từ Router!");
+        showLog("Đã đồng bộ dữ liệu mới nhất từ cụm Node!");
         setTimeout(
           () => (document.getElementById("action-log").style.display = "none"),
           2000,
@@ -288,15 +281,15 @@
 
       async function addNode() {
         const port = document.getElementById("node-port").value;
-        if (!port) return showLog("❌ Vui lòng nhập Port!", true);
-        showLog("⏳ Đang kết nối Server mới (Hệ thống chạy ở chế độ Lazy)...");
+        if (!port) return showLog("Vui lòng nhập Port!", true);
+        showLog("Đang kết nối Node mới vào cụm");
         const res = await fetch("/add_node", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: `http://127.0.0.1:${port}` }),
         });
         const data = await res.json();
-        showLog(`✅ ${data.message}`);
+        showLog(`${data.message}`);
         fetchStatus();
       }
 
@@ -313,7 +306,7 @@
         const key = document.getElementById("data-key").value;
         const value = document.getElementById("data-value").value;
         const replicas = document.getElementById("data-replicas").value;
-        if (!key) return showLog("❌ Nhập Key!", true);
+        if (!key) return showLog("Nhập Key!", true);
         const res = await fetch("/set", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -326,12 +319,12 @@
 
       async function getData() {
         const key = document.getElementById("data-key").value;
-        if (!key) return showLog("❌ Nhập Key!", true);
+        if (!key) return showLog("Nhập Key!", true);
         const res = await fetch(`/get?key=${key}`);
         const data = await res.json();
         if (data.status === "success") {
           showLog(
-            `✅ <b>${key}</b> = <span class="text-blue-600 font-bold text-lg">${data.value}</span> <br><div class="text-xs text-gray-500 mt-1 bg-gray-100 p-2 rounded border border-gray-200">${data.fetched_from}</div>`,
+            `<b>${key}</b> = <span class="text-blue-600 font-bold text-lg">${data.value}</span> <br><div class="text-xs text-gray-500 mt-1 bg-gray-100 p-2 rounded border border-gray-200">${data.fetched_from}</div>`,
           );
         } else {
           showLog(data.message, true);
@@ -339,16 +332,34 @@
         fetchStatus();
       }
 
+      async function deleteData() {
+        const key = document.getElementById("data-key").value;
+        if (!key) return showLog("Vui lòng nhập Key cần xóa!", true);
+
+        // Thêm popup xác nhận cho chuyên nghiệp
+        if (!confirm(`Bạn có chắc chắn muốn xóa VĨNH VIỄN Key '${key}'?`))
+          return;
+
+        const res = await fetch("/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key }),
+        });
+        const data = await res.json();
+        showLog(data.message, data.status === "error");
+        fetchStatus();
+      }
+
       async function proactiveRebalance() {
         showLog(
-          "⚖️ Đang bắt đầu quét dọn và phân bổ dữ liệu toàn cụm chủ động...",
+          "Đang bắt đầu quét dọn và phân bổ dữ liệu toàn cụm chủ động...",
         );
         try {
           const res = await fetch("/rebalance", { method: "POST" });
           const data = await res.json();
-          showLog(`✅ ${data.message}`);
+          showLog(data.message, data.status === "error");
         } catch (e) {
-          showLog("❌ Lỗi kích hoạt tái cân bằng!", true);
+          showLog("Lỗi kích hoạt tái cân bằng!", true);
         }
         setTimeout(fetchStatus, 1500);
       }
@@ -371,7 +382,7 @@
                             <span class="font-normal text-[10px] text-gray-400 pl-4">Góc phân bổ: [${anglesStr}]</span>
                         </span>
                         <button onclick="toggleNode('${url}')" class="text-xs bg-slate-50 hover:bg-slate-100 border px-3 py-1 rounded transition text-slate-600 font-semibold">
-                            ${info.active ? "Sập" : "Bật"}
+                            ${info.active ? "Tắt" : "Bật"}
                         </button>
                     </li>`;
         }
@@ -384,35 +395,40 @@
 
         for (const [key, info] of Object.entries(keys)) {
           if (!info.replicas) continue;
-          info.replicas.forEach((port, index) => {
+          const primaryPort = info.primary;
+
+          info.replicas.forEach((port) => {
             if (!keysByPort[port]) keysByPort[port] = [];
             keysByPort[port].push({
               name: key,
               angle: info.angle,
-              isPrimary: index === 0,
+              isPrimary: port === primaryPort,
             });
           });
         }
 
         for (const [port, portKeys] of Object.entries(keysByPort)) {
           if (portKeys.length === 0) continue;
-          const nodeColor = nodes[`http://127.0.0.1:${port}`]?.active
-            ? getColor(port)
-            : "#9ca3af";
+
+          // Trích xuất trạng thái Node an toàn để không bị lỗi undefined
+          const nodeStatus = nodes[`http://127.0.0.1:${port}`];
+          const nodeColor =
+            nodeStatus && nodeStatus.active ? getColor(port) : "#9ca3af";
 
           keyList.innerHTML += `
                     <div class="text-xs font-bold mt-2 mb-2 flex items-center gap-1 border-b pb-1" style="color: ${nodeColor}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                        Ổ CỨNG NODE ${port}
+                        ${port} ${nodeStatus && nodeStatus.active ? "" : '<span class="text-red-500 ml-1">(ĐÃ TẮT)</span>'}
                     </div>`;
 
           portKeys.forEach((k) => {
             const roleBadge = k.isPrimary
-              ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-medium">Bản chính</span>`
+              ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-bold">Bản chính</span>`
               : `<span class="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-slate-200">Bản sao</span>`;
+
             keyList.innerHTML += `
-                        <div class="bg-slate-50 p-2 rounded border border-slate-200 flex justify-between items-center ml-2 border-l-4 mb-1.5 ${k.isPrimary ? "bg-white" : "opacity-85"}" style="border-left-color: ${nodeColor}">
-                            <span class="font-semibold text-slate-700">${k.name} <span class="text-[10px] font-normal text-gray-400">(${k.angle}°)</span></span>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 flex justify-between items-center ml-2 border-l-4 mb-1.5 ${k.isPrimary ? "bg-white font-bold" : "opacity-85"}" style="border-left-color: ${nodeColor}">
+                            <span class="text-slate-700">${k.name} <span class="text-[10px] font-normal text-gray-400">(${k.angle}°)</span></span>
                             ${roleBadge}
                         </div>`;
           });
@@ -449,7 +465,7 @@
         for (const [key, info] of Object.entries(keysDict)) {
           if (info.angle === undefined) continue;
 
-          const primaryPort = info.replicas[0];
+          const primaryPort = info.primary;
           const keyColor =
             primaryPort && nodesDict[`http://127.0.0.1:${primaryPort}`]?.active
               ? getColor(primaryPort)

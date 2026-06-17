@@ -4,7 +4,6 @@ from pupdb.core import PupDB
 
 app = Flask(__name__)
 
-# Quét tham số --port từ dòng lệnh (Fix lỗi ValueError)
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', type=int, default=5001)
 args, unknown = parser.parse_known_args()
@@ -51,5 +50,5 @@ def get_all():
         return jsonify({"status": "error", "keys": []})
 
 if __name__ == '__main__':
-    print(f"🚀 Storage Node đang chạy tại Port {PORT}...")
+    print(f"Node đang chạy tại Port {PORT}...")
     app.run(port=PORT, debug=False, use_reloader=False)
