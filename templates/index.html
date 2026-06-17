@@ -2,7 +2,7 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <title>PupDB - Distributed Architecture</title>
+    <title>PupDB - Distributed Architecture Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -15,7 +15,7 @@
         height: 350px;
         border-radius: 50%;
         border: 4px dashed #cbd5e1;
-        margin: 40px auto;
+        margin: 20px auto;
         background: white;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       }
@@ -31,11 +31,9 @@
       }
       .node-point {
         position: absolute;
-        width: 24px;
-        height: 24px;
         border-radius: 50%;
         transform: translate(-50%, -50%);
-        border: 3px solid white;
+        border: 2px solid white;
         z-index: 10;
         transition: all 0.4s ease;
       }
@@ -61,31 +59,40 @@
     </style>
   </head>
   <body class="text-slate-800 p-6">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-extrabold text-center text-slate-800 mb-10">
-        Bộ Định Tuyến PupDB - Consistent Hashing
+        🚀 Bộ Quản Trị Cụm Lưu Trữ PupDB - Consistent Hashing
       </h1>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
-          class="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center"
+          class="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center"
         >
-          <h2 class="text-xl font-bold mb-2 text-slate-700">
-            Cụm Máy Chủ
+          <h2
+            class="text-lg font-bold mb-2 text-slate-700 flex items-center gap-2"
+          >
+            🔄 Sơ Đồ Định Tuyến VNodes
           </h2>
+          <p class="text-xs text-slate-400 text-center mb-4">
+            Ánh xạ dải băm ngẫu nhiên đan xen phân tán
+          </p>
           <div id="ui-ring" class="ring-container">
             <div class="center-dot"></div>
           </div>
         </div>
 
         <div class="space-y-6">
-          <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-slate-700 flex items-center">
-              Quản lý Server
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg border border-slate-100"
+          >
+            <h2
+              class="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"
+            >
+              🖥️ Quản lý Cụm Máy Chủ
             </h2>
-            <div class="flex gap-2 mb-4">
+            <div class="flex gap-2">
               <span
-                class="bg-gray-100 border border-r-0 rounded-l px-3 py-2 text-sm text-gray-600 flex items-center"
+                class="bg-gray-100 border border-r-0 rounded-l px-3 py-2 text-sm text-gray-500 flex items-center"
                 >127.0.0.1:</span
               >
               <input
@@ -96,63 +103,74 @@
               />
               <button
                 onclick="addNode()"
-                class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded text-sm font-bold shadow transition"
+                class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded text-sm font-bold shadow transition shrink-0"
               >
-                Thêm
+                Thêm Node
               </button>
               <button
-                onclick="syncData()"
-                class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded text-sm font-bold shadow transition"
+                onclick="proactiveRebalance()"
+                title="Kích hoạt Tái cân bằng toàn cụm chủ động"
+                class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-bold shadow transition shrink-0 flex items-center gap-1"
               >
-                Đồng bộ
+                ⚖️ Cân Bằng
               </button>
             </div>
             <ul
               id="node-list"
-              class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+              class="space-y-2 max-h-[180px] overflow-y-auto pr-1 mt-4"
             ></ul>
           </div>
 
-          <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-slate-700">
-              Ghi/Đọc Dữ liệu
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg border border-slate-100"
+          >
+            <h2
+              class="text-lg font-bold mb-4 text-slate-700 flex items-center gap-2"
+            >
+              💾 Thao Tác Dữ Liệu
             </h2>
-            <div class="space-y-3 mb-4 bg-slate-50 p-4 rounded-lg border">
+            <div
+              class="space-y-3 mb-4 bg-slate-50 p-4 rounded-lg border border-slate-200"
+            >
               <input
                 type="text"
                 id="data-key"
-                class="border rounded px-3 py-2 w-full text-sm outline-none"
-                placeholder="Key"
+                class="border rounded px-3 py-2 w-full text-sm outline-none focus:border-blue-500"
+                placeholder="Từ khóa (Key)"
               />
               <input
                 type="text"
                 id="data-value"
-                class="border rounded px-3 py-2 w-full text-sm outline-none"
-                placeholder="Value"
+                class="border rounded px-3 py-2 w-full text-sm outline-none focus:border-blue-500"
+                placeholder="Giá trị (Value)"
               />
-              <div class="flex items-center gap-2">
-                <label class="text-sm font-bold">Số bản sao:</label>
+              <div
+                class="flex items-center justify-between bg-white p-2 rounded border border-slate-200"
+              >
+                <label class="text-xs font-bold text-slate-600"
+                  >Hệ số nhân bản (Replicas):</label
+                >
                 <input
                   type="number"
                   id="data-replicas"
                   value="2"
                   min="1"
                   max="5"
-                  class="border rounded px-2 py-1 w-16 text-sm text-center"
+                  class="border rounded px-2 py-1 w-16 text-sm text-center font-bold bg-slate-50"
                 />
               </div>
-              <div class="flex gap-2">
+              <div class="flex gap-2 pt-1">
                 <button
                   onclick="setData()"
                   class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-sm font-bold shadow transition"
                 >
-                  Lưu
+                  Lưu Key
                 </button>
                 <button
                   onclick="getData()"
                   class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded text-sm font-bold shadow transition"
                 >
-                  Đọc
+                  Đọc Key
                 </button>
               </div>
             </div>
@@ -160,10 +178,50 @@
               id="action-log"
               class="text-sm p-3 rounded border hidden mb-2 font-mono"
             ></div>
-            <ul
-              id="key-list"
-              class="space-y-2 text-sm max-h-[150px] overflow-y-auto"
-            ></ul>
+          </div>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col"
+        >
+          <div class="flex justify-between items-center border-b pb-2 mb-2">
+            <div class="flex flex-col">
+              <h2
+                class="text-lg font-bold text-slate-700 flex items-center gap-2"
+              >
+                📦 Phân Bổ Ổ Cứng Thực Tế
+              </h2>
+              <p class="text-xs text-slate-400">
+                Chi tiết vật lý các file JSON trên từng ổ đĩa
+              </p>
+            </div>
+            <button
+              id="refresh-btn"
+              onclick="manualRefresh()"
+              title="Làm mới danh sách dữ liệu từ Server"
+              class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg border transition shadow-sm flex items-center justify-center"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <div
+            id="key-list-container"
+            class="flex-1 overflow-y-auto pr-1 max-h-[460px] space-y-4"
+          >
+            <div id="key-list" class="space-y-4"></div>
           </div>
         </div>
       </div>
@@ -193,96 +251,32 @@
       }
 
       async function fetchStatus() {
-        const res = await fetch("/status");
+        // Dùng trick thêm timestamp (?t=...) để chống Cache trình duyệt 100%
+        const res = await fetch("/status?t=" + new Date().getTime());
         const data = await res.json();
         drawRing(data.nodes, data.keys);
         updateLists(data.nodes, data.keys);
       }
 
-      async function syncData(silent = false) {
-        if (!silent) showLog("Đang đồng bộ...");
-        try {
-          await fetch("/sync");
-          if (!silent) {
-            showLog("Đã đồng bộ xong dữ liệu từ các Node!");
-            setTimeout(
-              () =>
-                (document.getElementById("action-log").style.display = "none"),
-              2500,
-            );
-          }
-        } catch (error) {
-          if (!silent) showLog("Lỗi đồng bộ!", true);
-        }
-        fetchStatus();
-      }
+      async function manualRefresh() {
+        const btn = document.getElementById("refresh-btn");
+        // Cho icon bên trong nút xoay vòng vòng tạo cảm giác loading
+        btn.querySelector("svg").classList.add("animate-spin", "text-blue-500");
 
-      function updateLists(nodes, keys) {
-        const nodeList = document.getElementById("node-list");
-        nodeList.innerHTML = "";
-        for (const [url, info] of Object.entries(nodes)) {
-          const port = url.split(":").pop();
-          const nodeColor = info.active ? getColor(port) : "#9ca3af";
+        await fetchStatus();
 
-          nodeList.innerHTML += `
-                    <li class="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
-                        <span class="text-sm font-bold flex items-center gap-2" style="color: ${nodeColor}; ${!info.active ? "text-decoration: line-through;" : ""}">
-                            <span style="width:12px; height:12px; border-radius:50%; background-color:${nodeColor}"></span>
-                            Port: ${port} <span class="font-normal text-xs text-gray-400">(${info.angle}°)</span>
-                        </span>
-                        <button onclick="toggleNode('${url}')" class="text-xs bg-slate-100 hover:bg-slate-200 border px-3 py-1 rounded transition text-slate-600">
-                            ${info.active ? "Tắt" : "Bật"}
-                        </button>
-                    </li>`;
-        }
-        const keyList = document.getElementById("key-list");
-        keyList.innerHTML = "";
+        // Dừng xoay sau 0.5s và hiển thị thông báo góc dưới
+        setTimeout(() => {
+          btn
+            .querySelector("svg")
+            .classList.remove("animate-spin", "text-blue-500");
+        }, 500);
 
-        let keysByPort = {};
-        for (const url of Object.keys(nodes)) {
-          keysByPort[url.split(":").pop()] = [];
-        }
-
-        for (const [key, info] of Object.entries(keys)) {
-          if (!info.replicas) continue;
-
-          info.replicas.forEach((port, index) => {
-            if (!keysByPort[port]) keysByPort[port] = [];
-            keysByPort[port].push({
-              name: key,
-              angle: info.angle,
-              isPrimary: index === 0,
-            });
-          });
-        }
-
-
-        for (const [port, portKeys] of Object.entries(keysByPort)) {
-          if (portKeys.length === 0) continue;
-
-          const nodeColor = nodes[`http://127.0.0.1:${port}`]?.active
-            ? getColor(port)
-            : "#9ca3af";
-
-          keyList.innerHTML += `
-                    <div class="text-xs font-bold mt-4 mb-2 flex items-center gap-1" style="color: ${nodeColor}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                        Lưu trữ tại Server ${port}
-                    </div>`;
-
-          portKeys.forEach((k) => {
-            // Badge phân biệt Bản Chính và Bản Sao
-            const roleBadge = k.isPrimary
-              ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 font-medium">Bản chính</span>`
-              : `<span class="text-[10px] text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">Bản sao</span>`;
-
-            keyList.innerHTML += `
-                        <li class="bg-white p-2 rounded border shadow-sm flex justify-between items-center ml-2 border-l-4 mb-1 ${k.isPrimary ? "" : "opacity-80"}" style="border-left-color: ${nodeColor}">
-                            <b style="color: ${nodeColor}">${k.name} <span class="text-[10px] font-normal text-gray-400">(${k.angle}°)</span></b>
-                            ${roleBadge}
-                        </li>`;
-          });
-        }
+        showLog("🔄 Giao diện đã đồng bộ dữ liệu mới nhất từ Router!");
+        setTimeout(
+          () => (document.getElementById("action-log").style.display = "none"),
+          2000,
+        );
       }
 
       function showLog(msg, isError = false) {
@@ -294,15 +288,15 @@
 
       async function addNode() {
         const port = document.getElementById("node-port").value;
-        if (!port) return showLog("Vui lòng nhập Port!", true);
-        showLog("Đang Thêm Server và tổ chức lại dải băm (Rebalancing)...");
+        if (!port) return showLog("❌ Vui lòng nhập Port!", true);
+        showLog("⏳ Đang kết nối Server mới (Hệ thống chạy ở chế độ Lazy)...");
         const res = await fetch("/add_node", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: `http://127.0.0.1:${port}` }),
         });
         const data = await res.json();
-        showLog(` ${data.message}`);
+        showLog(`✅ ${data.message}`);
         fetchStatus();
       }
 
@@ -319,7 +313,7 @@
         const key = document.getElementById("data-key").value;
         const value = document.getElementById("data-value").value;
         const replicas = document.getElementById("data-replicas").value;
-        if (!key) return showLog("Nhập Key!", true);
+        if (!key) return showLog("❌ Nhập Key!", true);
         const res = await fetch("/set", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -332,49 +326,123 @@
 
       async function getData() {
         const key = document.getElementById("data-key").value;
-        if (!key) return showLog("Nhập Key!", true);
+        if (!key) return showLog("❌ Nhập Key!", true);
         const res = await fetch(`/get?key=${key}`);
         const data = await res.json();
-        if (data.status === "success")
+        if (data.status === "success") {
           showLog(
-            `<b>${key}</b> = ${data.value} <br><span class="text-xs text-gray-500 italic">Dữ liệu từ: ${data.fetched_from}</span>`,
+            `✅ <b>${key}</b> = <span class="text-blue-600 font-bold text-lg">${data.value}</span> <br><div class="text-xs text-gray-500 mt-1 bg-gray-100 p-2 rounded border border-gray-200">${data.fetched_from}</div>`,
           );
-        else showLog(data.message, true);
+        } else {
+          showLog(data.message, true);
+        }
         fetchStatus();
+      }
+
+      async function proactiveRebalance() {
+        showLog(
+          "⚖️ Đang bắt đầu quét dọn và phân bổ dữ liệu toàn cụm chủ động...",
+        );
+        try {
+          const res = await fetch("/rebalance", { method: "POST" });
+          const data = await res.json();
+          showLog(`✅ ${data.message}`);
+        } catch (e) {
+          showLog("❌ Lỗi kích hoạt tái cân bằng!", true);
+        }
+        setTimeout(fetchStatus, 1500);
+      }
+
+      function updateLists(nodes, keys) {
+        const nodeList = document.getElementById("node-list");
+        nodeList.innerHTML = "";
+        for (const [url, info] of Object.entries(nodes)) {
+          const port = url.split(":").pop();
+          const nodeColor = info.active ? getColor(port) : "#9ca3af";
+          let anglesStr = info.vnodes.map((v) => v.angle + "°").join(", ");
+
+          nodeList.innerHTML += `
+                    <li class="flex justify-between items-center bg-white p-2 rounded border shadow-sm border-slate-200">
+                        <span class="text-sm font-bold flex flex-col gap-1" style="color: ${nodeColor}; ${!info.active ? "text-decoration: line-through;" : ""}">
+                            <span class="flex items-center gap-2">
+                                <span style="width:10px; height:12px; border-radius:50%; background-color:${nodeColor}"></span>
+                                Port: ${port} <span class="text-[10px] bg-slate-100 border px-1.5 py-0.5 rounded text-slate-500 font-normal">3 VNodes</span>
+                            </span>
+                            <span class="font-normal text-[10px] text-gray-400 pl-4">Góc phân bổ: [${anglesStr}]</span>
+                        </span>
+                        <button onclick="toggleNode('${url}')" class="text-xs bg-slate-50 hover:bg-slate-100 border px-3 py-1 rounded transition text-slate-600 font-semibold">
+                            ${info.active ? "Sập" : "Bật"}
+                        </button>
+                    </li>`;
+        }
+
+        const keyList = document.getElementById("key-list");
+        keyList.innerHTML = "";
+        let keysByPort = {};
+        for (const url of Object.keys(nodes))
+          keysByPort[url.split(":").pop()] = [];
+
+        for (const [key, info] of Object.entries(keys)) {
+          if (!info.replicas) continue;
+          info.replicas.forEach((port, index) => {
+            if (!keysByPort[port]) keysByPort[port] = [];
+            keysByPort[port].push({
+              name: key,
+              angle: info.angle,
+              isPrimary: index === 0,
+            });
+          });
+        }
+
+        for (const [port, portKeys] of Object.entries(keysByPort)) {
+          if (portKeys.length === 0) continue;
+          const nodeColor = nodes[`http://127.0.0.1:${port}`]?.active
+            ? getColor(port)
+            : "#9ca3af";
+
+          keyList.innerHTML += `
+                    <div class="text-xs font-bold mt-2 mb-2 flex items-center gap-1 border-b pb-1" style="color: ${nodeColor}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        Ổ CỨNG NODE ${port}
+                    </div>`;
+
+          portKeys.forEach((k) => {
+            const roleBadge = k.isPrimary
+              ? `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-medium">Bản chính</span>`
+              : `<span class="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-slate-200">Bản sao</span>`;
+            keyList.innerHTML += `
+                        <div class="bg-slate-50 p-2 rounded border border-slate-200 flex justify-between items-center ml-2 border-l-4 mb-1.5 ${k.isPrimary ? "bg-white" : "opacity-85"}" style="border-left-color: ${nodeColor}">
+                            <span class="font-semibold text-slate-700">${k.name} <span class="text-[10px] font-normal text-gray-400">(${k.angle}°)</span></span>
+                            ${roleBadge}
+                        </div>`;
+          });
+        }
       }
 
       function drawRing(nodesDict, keysDict) {
         const ring = document.getElementById("ui-ring");
-
-        // Vẽ mặt nền: 2 Trục tọa độ và các mốc góc độ
-        const baseHTML = `
-                <div style="position: absolute; width: 2px; height: 100%; background: #e2e8f0; left: 50%; transform: translateX(-50%); z-index: 1;"></div>
-                <div style="position: absolute; width: 100%; height: 2px; background: #e2e8f0; top: 50%; transform: translateY(-50%); z-index: 1;"></div>
-                
-                <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;">0°</div>
-                <div style="position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; font-weight: bold;">90°</div>
-                <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;">180°</div>
-                <div style="position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; font-weight: bold;">270°</div>
-
+        ring.innerHTML = `
+                <div style="position: absolute; width: 2px; height: 100%; background: #f1f5f9; left: 50%; transform: translateX(-50%); z-index: 1;"></div>
+                <div style="position: absolute; width: 100%; height: 2px; background: #f1f5f9; top: 50%; transform: translateY(-50%); z-index: 1;"></div>
+                <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #94a3b8; font-weight: bold;">0°</div>
+                <div style="position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #94a3b8; font-weight: bold;">90°</div>
+                <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #94a3b8; font-weight: bold;">180°</div>
+                <div style="position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #94a3b8; font-weight: bold;">270°</div>
                 <div class="center-dot" style="z-index: 2;"></div>
             `;
-        ring.innerHTML = baseHTML;
 
-        // Vẽ Node
         for (const [url, info] of Object.entries(nodesDict)) {
           const port = url.split(":").pop();
           const nodeColor = info.active ? getColor(port) : "#9ca3af";
+          const shadow = info.active ? `box-shadow: 0 0 8px ${nodeColor};` : "";
 
-          const rad = (info.angle - 90) * (Math.PI / 180);
-          const x = 175 + 175 * Math.cos(rad);
-          const y = 175 + 175 * Math.sin(rad);
-
-          const shadow = info.active
-            ? `box-shadow: 0 0 10px ${nodeColor};`
-            : "";
-
-          ring.innerHTML += `<div class="node-point" style="left:${x}px; top:${y}px; background-color: ${nodeColor}; ${shadow}"></div>
-                                   <div class="label" style="left:${x}px; top:${y}px; color: ${nodeColor}; z-index: 10;">${port} (${info.angle}°)</div>`;
+          info.vnodes.forEach((vnode, index) => {
+            const rad = (vnode.angle - 90) * (Math.PI / 180);
+            const x = 175 + 175 * Math.cos(rad);
+            const y = 175 + 175 * Math.sin(rad);
+            ring.innerHTML += `<div class="node-point" style="width:16px; height:16px; left:${x}px; top:${y}px; background-color: ${nodeColor}; ${shadow}"></div>
+                                       <div class="label" style="left:${x}px; top:${y}px; color: ${nodeColor}; z-index: 10; font-size: 9px;">${port}-v${index + 1}</div>`;
+          });
         }
 
         let angleCollisionCount = {};
@@ -401,7 +469,6 @@
       }
 
       fetchStatus();
-      setInterval(fetchStatus, 3000);
     </script>
   </body>
 </html>
